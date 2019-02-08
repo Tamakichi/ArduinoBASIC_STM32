@@ -3,6 +3,8 @@ Arduino Basic シリアルコンソール対応
 =============
 Robin Edwards氏が開発・公開している「Arduino Basic」のArduino STM32対応改良版です。  
 
+![ターミナルコンソール](image/term.png)
+
 **オリジナル版**  
 * Arduino Basic https://github.com/robinhedwards/ArduinoBASIC  
 
