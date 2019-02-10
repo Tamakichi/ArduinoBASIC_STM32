@@ -37,8 +37,6 @@ extern EEPROMClass EEPROM;
 #define VT100_CLS   "\x1b[2J"
 
 // *** フラッシュメモリ管理 ***********
-#include "src/lib/tFlashMan.h"
-
 
 // フラッシュメモリ管理オブジェクト(プログラム保存、システム環境設定を管理）
 tFlashMan FlashMan(FLASH_PAGE_NUM,FLASH_PAGE_SIZE, FLASH_SAVE_NUM, FLASH_PAGE_PAR_PRG); 

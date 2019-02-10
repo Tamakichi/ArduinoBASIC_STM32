@@ -67,7 +67,8 @@
 #define TOKEN_LOAD              61
 #define TOKEN_PINREAD           62
 #define TOKEN_ANALOGRD          63
-#define TOKEN_DIR               64
+//#define TOKEN_DIR               64
+#define TOKEN_FILES             64
 #define TOKEN_DELETE            65
 
 #define FIRST_IDENT_TOKEN       23

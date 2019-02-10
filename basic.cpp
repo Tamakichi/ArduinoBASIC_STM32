@@ -41,7 +41,8 @@
 
 /*
  *  2019/02/03 Modified by Tamakichi 
- *  2019/02/08 Modified by Tamakichi,Arduino STM32対応
+ *  2019/02/08 Modified by Tamakichi,support Arduino STM32
+ *  2019/02/10 Modified by Tamakichi,add FILES cimmand (FILES [start[,last]])
  */
  
 // 日本語訳
@@ -170,13 +171,17 @@ const TokenTableEntry tokenTable[] = {
     {"LIST",TKN_FMT_POST}, {"RUN",TKN_FMT_POST}, {"GOTO",TKN_FMT_POST}, {"REM",TKN_FMT_POST},
     {"STOP",TKN_FMT_POST}, {"INPUT",TKN_FMT_POST},  {"CONT",TKN_FMT_POST}, {"IF",TKN_FMT_POST},
     {"THEN",TKN_FMT_PRE|TKN_FMT_POST}, {"LEN",1|TKN_ARG1_TYPE_STR}, {"VAL",1|TKN_ARG1_TYPE_STR}, {"RND",0},
-    {"INT",1}, {"STR$", 1|TKN_RET_TYPE_STR}, {"FOR",TKN_FMT_POST}, {"TO",TKN_FMT_PRE|TKN_FMT_POST},
-    {"STEP",TKN_FMT_PRE|TKN_FMT_POST}, {"NEXT", TKN_FMT_POST}, {"MOD",TKN_FMT_PRE|TKN_FMT_POST}, {"NEW",TKN_FMT_POST},
-    {"GOSUB",TKN_FMT_POST}, {"RETURN",TKN_FMT_POST}, {"DIM", TKN_FMT_POST}, {"LEFT$",2|TKN_ARG1_TYPE_STR|TKN_RET_TYPE_STR},
-    {"RIGHT$",2|TKN_ARG1_TYPE_STR|TKN_RET_TYPE_STR}, {"MID$",3|TKN_ARG1_TYPE_STR|TKN_RET_TYPE_STR}, {"CLS",TKN_FMT_POST}, {"PAUSE",TKN_FMT_POST},
+    {"INT",1}, {"STR$", 1|TKN_RET_TYPE_STR}, 
+    {"FOR",TKN_FMT_POST}, {"TO",TKN_FMT_PRE|TKN_FMT_POST},{"STEP",TKN_FMT_PRE|TKN_FMT_POST}, {"NEXT", TKN_FMT_POST},
+    {"MOD",TKN_FMT_PRE|TKN_FMT_POST}, {"NEW",TKN_FMT_POST},
+    {"GOSUB",TKN_FMT_POST}, {"RETURN",TKN_FMT_POST}, {"DIM", TKN_FMT_POST},
+    {"LEFT$",2|TKN_ARG1_TYPE_STR|TKN_RET_TYPE_STR},{"RIGHT$",2|TKN_ARG1_TYPE_STR|TKN_RET_TYPE_STR},
+    {"MID$",3|TKN_ARG1_TYPE_STR|TKN_RET_TYPE_STR},
+    {"CLS",TKN_FMT_POST}, {"PAUSE",TKN_FMT_POST},
     {"POSITION", TKN_FMT_POST},  {"PIN",TKN_FMT_POST}, {"PINMODE", TKN_FMT_POST}, {"INKEY$", 0},
     {"SAVE", TKN_FMT_POST}, {"LOAD", TKN_FMT_POST}, {"PINREAD",1}, {"ANALOGRD",1},
-    {"DIR", TKN_FMT_POST}, {"DELETE", TKN_FMT_POST}
+//    {"DIR", TKN_FMT_POST}, {"DELETE", TKN_FMT_POST}
+    {"FILES", TKN_FMT_POST}, {"DELETE", TKN_FMT_POST}
 };
 
 
@@ -2072,6 +2077,62 @@ int parse_LIST() {
     return 0;
 }
 
+// FILES コマンドの処理
+//  書式 FILES [start][,end]
+//   正常終了 0
+//   異常終了 エラーコード
+//   
+int parseFILES() {
+    getNextToken();
+    uint16_t first = 0, last = FLASH_SAVE_NUM-1;
+  
+    // 第1引数の処理
+    if (curToken != TOKEN_EOL && curToken != TOKEN_CMD_SEP) {
+        int val = expectNumber();
+        if (val)
+            return val;  // error
+    
+        if (executeMode) {
+            first = (uint16_t)stackPopNum();
+            last = first;
+        }
+    }
+  
+    // "," がある場合、第2引数の処理を行う
+    if (curToken == TOKEN_COMMA) {
+        getNextToken();
+        int val = expectNumber();
+        if (val) 
+            return val; // error
+    
+        if (executeMode)
+            last = (uint16_t)stackPopNum();
+    }
+  
+    // 実行モードの場合、ファイルリスト出力  
+    if (executeMode) {
+        if (first<0 || last>FLASH_SAVE_NUM-1 || first>last) {
+            return ERROR_BAD_PARAMETER; // error
+        }
+        
+        uint32_t flash_adr;
+        unsigned char *p;
+        for (uint16_t i=first ; i <= last; i++) {    
+            flash_adr = (uint32_t)FlashMan.getPrgAddress(i); // プログラム保存アドレスの取得
+            host_outputInt(i,CDEV_SCREEN);                   // プログラム番号の出力
+            host_outputChar(':',CDEV_SCREEN);
+            if(!FlashMan.isExistPrg(i)) {                    //  プログラム有無のチェック
+                host_outputString("(none)",CDEV_SCREEN);
+            } else {
+                p = (uint8_t*)flash_adr;
+                printTokens(p+4, CDEV_SCREEN);           // 行番号より後ろを文字列に変換して表示
+            } 
+            host_newLine(CDEV_SCREEN);
+        }                
+    }
+    return 0;
+}
+
 // PRINT コマンドの処理
 //  書式 PRINT <expr>;<expr>...
 //   正常終了 0
@@ -2511,12 +2572,13 @@ int parseSimpleCmd() {
         case TOKEN_CLS:     // CLS コマンド
             host_cls();
             break;
-
+/*
         case TOKEN_DIR:     // DIR コマンド
 #if EXTERNAL_EEPROM
             host_directoryExtEEPROM();
 #endif
             break;
+*/
         }
     }
     return 0;
@@ -2604,6 +2666,9 @@ int parseStmts() {
         case TOKEN_DELETE:
             ret = parseLoadSaveCmd();
             break;
+        case TOKEN_FILES:
+            ret = parseFILES();
+            break;
         
         // 整数型引数を２つもつコマンド
         case TOKEN_POSITION:
@@ -2618,7 +2683,7 @@ int parseStmts() {
         case TOKEN_CONT:
         case TOKEN_RETURN:
         case TOKEN_CLS:
-        case TOKEN_DIR:
+        //case TOKEN_DIR:
             ret = parseSimpleCmd();
             break;
             
