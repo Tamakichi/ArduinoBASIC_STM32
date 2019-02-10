@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <stdint.h>
+#include "src/lib/tFlashMan.h"
+extern tFlashMan FlashMan;
 
 // ** (1)起動時コンソール画面指定 0:シリアルターミナル
 #define USE_SCREEN_MODE 0  // 現バージョンでは必ず0を指定

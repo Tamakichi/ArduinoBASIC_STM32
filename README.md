@@ -14,6 +14,7 @@ Robin Edwards氏が開発・公開している「Arduino Basic」のArduino STM3
 * PS/2キーボード利用は廃止(シリアルコンソールから入力)  
 * コマンド実行後、OKプロンプトを表示するように変更
 * LOAD n、SAVE nで内部フラッシュメモリに6本保存可能(n:0～5、n省略時 0)  
+* FILES [start[,end]] で保存プログラム一覧表示(start,end 0～5)  
 * プログラムソースに日本語コメント追加、ソースの整形
 * ファイル名arduino_BASIC.ino をarduinoBASIC.ino に変更
 
