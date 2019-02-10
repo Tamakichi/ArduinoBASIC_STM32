@@ -33,7 +33,9 @@ void loop() {
     if (!autorun) {
         // 自動実行でない場合の処理
         // get a line from the user
+        host_show_curs(true);
         char *input = host_readLine();
+        host_show_curs(false);
 
         // special editor commands
         //（特別な編集コマンドの入力チェック）

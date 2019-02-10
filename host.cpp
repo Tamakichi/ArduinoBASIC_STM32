@@ -368,3 +368,7 @@ void host_loadProgram(int16_t flleNo) {
   sysPROGEND = mem[MEMORY_SIZE-2] | (mem[MEMORY_SIZE-1] << 8);
 
 }
+
+void host_show_curs(uint8_t flg) {
+     sc->show_curs(flg);  
+}
