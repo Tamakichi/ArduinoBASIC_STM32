@@ -66,3 +66,4 @@ void host_outputFreeMem(unsigned int val);
 
 void host_saveProgram(bool autoexec, int16_t flleNo);
 void host_loadProgram(int16_t flleNo);
+void host_show_curs(uint8_t flg);
